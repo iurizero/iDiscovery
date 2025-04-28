@@ -6,22 +6,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Cria o arquivo .desktop se não existir
-if [ ! -f ~/.local/share/applications/iDiscovery.desktop ]; then
-    echo -e "${YELLOW}Criando atalho com icone...${NC}"
-    cat > ~/.local/share/applications/iDiscovery.desktop << EOL
-[Desktop Entry]
-Name=iDiscovery
-Comment=Network Scanner Tool
-Exec=$(pwd)/iDiscovery.sh
-Icon=$(pwd)/iD icon.ico
-Terminal=true
-Type=Application
-Categories=Utility;
-EOL
-    chmod +x ~/.local/share/applications/iDiscovery.desktop
-fi
-
 echo -e "${GREEN}iDiscovery - Network Scanner${NC}"
 echo "Verificando dependências..."
 
@@ -35,7 +19,8 @@ fi
 
 # Verifica se está rodando como root
 if [ "$EUID" -ne 0 ]; then
-    echo -e "${YELLOW}Executando com privilégios de root...${NC}"
+    echo -e "${YELLOW}Este programa requer privilégios de root para escanear a rede.${NC}"
+    echo -e "${YELLOW}Por favor, insira sua senha quando solicitado.${NC}"
     sudo "$0" "$@"
     exit $?
 fi
