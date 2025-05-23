@@ -1,0 +1,5 @@
+# Dependências Python
+scapy>=2.5.0,<3.0.0
+
+# Nota: ipaddress é parte da biblioteca padrão do Python 3
+# e não precisa ser instalado separadamente 
