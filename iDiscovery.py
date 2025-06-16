@@ -10,7 +10,11 @@ import sys
 import os
 import re
 import logging
+<<<<<<< HEAD
 from datetime import datetime
+=======
+import platform
+>>>>>>> fbc917eec58c3489d27390b0ecfd80d30aa8b11d
 
 # Importa resource apenas em sistemas compatíveis (Linux/Unix)
 if platform.system().lower() != 'windows':
@@ -26,6 +30,7 @@ if platform.system().lower() != 'windows':
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from scapy.all import IP, TCP, sr1, RandShort, conf, get_if_list, get_if_addr
 
+<<<<<<< HEAD
 # Configuração de logging
 logging.basicConfig(
     level=logging.ERROR,  # Mudado para ERROR para remover INFO
@@ -40,6 +45,8 @@ logging.basicConfig(
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 logging.getLogger("scapy.loading").setLevel(logging.ERROR)
 
+=======
+>>>>>>> fbc917eec58c3489d27390b0ecfd80d30aa8b11d
 # Configurações de timeout e performance
 DEFAULT_TIMEOUT = 0.5  # Timeout padrão para scans
 UBIQUITI_TIMEOUT = 1.0  # Timeout reduzido para scan Ubiquiti
@@ -217,9 +224,8 @@ def scan_host_tcp_syn(ip, ports=None, iface=None, timeout=TCP_SYN_TIMEOUT):
                 pass
         
         try:
-            # Contador de respostas válidas
             valid_responses = 0
-            required_responses = 2  # Precisa de pelo menos 2 respostas válidas
+            required_responses = 2
             
             # Envia cada pacote individualmente para evitar problemas com RandShort
             for port in ports:
@@ -230,27 +236,19 @@ def scan_host_tcp_syn(ip, ports=None, iface=None, timeout=TCP_SYN_TIMEOUT):
                     
                     if response is not None and response.haslayer(TCP):
                         # Verifica se é uma resposta SYN-ACK (0x12)
-                        if response[TCP].flags == 0x12:
-                            valid_responses += 1
-                            if valid_responses >= required_responses:
-                                return True, None
-                        # Verifica se é um RST (0x14) - host existe mas porta fechada
-                        elif response[TCP].flags == 0x14:
+                        if response[TCP].flags == 0x12 or response[TCP].flags == 0x14:
                             valid_responses += 1
                             if valid_responses >= required_responses:
                                 return True, None
                 except Exception as e:
-                    if not isinstance(e, socket.timeout):
-                        print(f"\nErro ao enviar pacote para {ip_str}:{port}: {str(e)}")
+                    # Não imprime erro para timeout
                     continue
             
             return False, None
         finally:
             if iface:
                 conf.iface = original_iface
-    except Exception as e:
-        if not isinstance(e, socket.timeout):
-            print(f"\nErro ao escanear {ip_str}: {str(e)}")
+    except Exception:
         return False, None
 
 def scan_host_ubiquiti(ip, timeout=UBIQUITI_TIMEOUT):
@@ -317,12 +315,13 @@ def scan_host_default(ip_str, fast_mode=True):
                     valid_responses += 1
                     if valid_responses >= required_responses:
                         return True, None
-        
+                        # break não é necessário pois já retorna
         return False, None
     except Exception as e:
         logging.error(f"Erro no scan padrão de {ip_str}: {e}")
         return False, None
 
+<<<<<<< HEAD
 def scan_host(ip_str, arp_table, fast_mode=True, scan_method='default', iface=None):
     """Escaneia um host específico usando o método escolhido"""
     try:
@@ -369,6 +368,18 @@ def print_progress(current, total, last_percent=None, force_update=False):
         return progress
     except Exception as e:
         return last_percent
+=======
+def print_progress(current, total, batch=False):
+    """Imprime uma barra de progresso (atualiza menos se batch=True)"""
+    if batch and current % 10 != 0 and current != total:
+        return
+    progress = (current / total) * 100
+    bar_length = 50
+    filled_length = int(bar_length * current / total)
+    bar = '█' * filled_length + '░' * (bar_length - filled_length)
+    sys.stdout.write(f'\rEscaneando: [{bar}] {progress:.1f}% ({current}/{total})')
+    sys.stdout.flush()
+>>>>>>> fbc917eec58c3489d27390b0ecfd80d30aa8b11d
 
 def scan_network(fast_mode=True, target_ip=None, cidr=None, scan_method='default', iface=None):
     """Escaneia a rede local usando o método escolhido"""
@@ -433,23 +444,38 @@ def scan_network(fast_mode=True, target_ip=None, cidr=None, scan_method='default
     ip_list = list(network.hosts())
     total_ips = len(ip_list)
     processed_ips = 0
+<<<<<<< HEAD
     
+=======
+>>>>>>> fbc917eec58c3489d27390b0ecfd80d30aa8b11d
     stop_event = threading.Event()
-    
     try:
+<<<<<<< HEAD
         batch_size = min(BATCH_SIZE[scan_method], config['max_concurrent'])
         cpu_count = os.cpu_count() or 2
         max_workers = min(batch_size, cpu_count * 2)
+=======
+        batch_size = BATCH_SIZE[scan_method]
+        cpu_count = os.cpu_count() or 2
+        # Aumenta max_workers para melhor uso de CPU
+        max_workers = min(batch_size * 2, cpu_count * WORKER_MULTIPLIER[scan_method] * 2)
+        
+        print(f"Usando {max_workers} workers em lotes de {batch_size} IPs\n")
+>>>>>>> fbc917eec58c3489d27390b0ecfd80d30aa8b11d
         
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {}
             active_batches = 0
+<<<<<<< HEAD
             last_percent = None
             processed_ips_set = set()
             last_update_time = time.time()
             
             # Inicia a barra de progresso imediatamente
             print_progress(0, total_ips, force_update=True)
+=======
+            max_concurrent_batches = 4  # Permite mais lotes concorrentes
+>>>>>>> fbc917eec58c3489d27390b0ecfd80d30aa8b11d
             
             for i in range(0, len(ip_list), batch_size):
                 if stop_event.is_set():
@@ -479,8 +505,13 @@ def scan_network(fast_mode=True, target_ip=None, cidr=None, scan_method='default
                             active_batches -= 1
                 
                 # Aguarda se houver muitos lotes ativos
+<<<<<<< HEAD
                 while active_batches >= config['max_concurrent']:
                     time.sleep(0.01)  # Reduzido para atualizações mais frequentes
+=======
+                while active_batches >= max_concurrent_batches:
+                    time.sleep(0.05)
+>>>>>>> fbc917eec58c3489d27390b0ecfd80d30aa8b11d
                     active_batches = sum(1 for f in futures if not f.done())
                 
                 batch = ip_list[i:i + batch_size]
@@ -496,7 +527,30 @@ def scan_network(fast_mode=True, target_ip=None, cidr=None, scan_method='default
                 futures.update(batch_futures)
                 active_batches += 1
                 
+<<<<<<< HEAD
                 time.sleep(config['batch_delay'])
+=======
+                # Processa resultados em lote
+                done_futures = [f for f in futures if f.done()]
+                for future in done_futures:
+                    try:
+                        is_active, mac = future.result()
+                        if is_active:
+                            ip = futures[future]
+                            active_ips.append((ip, mac))
+                    except Exception as e:
+                        if not stop_event.is_set():
+                            print(f"\nErro ao escanear IP: {e}")
+                    finally:
+                        del futures[future]
+                        active_batches -= 1
+                        processed_ips += 1
+                print_progress(processed_ips, total_ips, batch=True)
+                if scan_method == 'ubiquiti':
+                    time.sleep(0.02)
+                elif scan_method == 'tcp_syn':
+                    time.sleep(0.01)
+>>>>>>> fbc917eec58c3489d27390b0ecfd80d30aa8b11d
             
             # Processa os lotes restantes
             for future in list(futures.keys()):
@@ -516,12 +570,22 @@ def scan_network(fast_mode=True, target_ip=None, cidr=None, scan_method='default
                             
                     except Exception as e:
                         if not stop_event.is_set():
+<<<<<<< HEAD
                             logging.error(f"Erro ao escanear IP {ip}: {e}")
             
             # Garante que a barra chegue a 100%
             print_progress(total_ips, total_ips, force_update=True)
             print("\n")
             
+=======
+                            print(f"\nErro ao escanear IP: {e}")
+                    finally:
+                        processed_ips += 1
+                        print_progress(processed_ips, total_ips, batch=True)
+        
+        print("\n\nIPs ativos encontrados:\n")
+        
+>>>>>>> fbc917eec58c3489d27390b0ecfd80d30aa8b11d
         if not active_ips:
             print("Nenhum dispositivo encontrado na rede.")
             return
