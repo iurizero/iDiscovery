@@ -1,5 +1,19 @@
 # Dependências Python
 scapy>=2.5.0,<3.0.0
+python-nmap>=0.7.1
+netifaces>=0.11.0
+psutil>=5.9.0
+colorama>=0.4.6
+tqdm>=4.65.0
 
-# Nota: ipaddress é parte da biblioteca padrão do Python 3
-# e não precisa ser instalado separadamente 
+# Notas:
+# - ipaddress é parte da biblioteca padrão do Python 3
+# - socket, subprocess, threading, re, logging são parte da biblioteca padrão
+# - platform, datetime, sys, os são parte da biblioteca padrão
+# - concurrent.futures é parte da biblioteca padrão do Python 3
+# - resource é parte da biblioteca padrão em sistemas Unix/Linux
+
+# Requisitos do sistema:
+# - Windows: Npcap (para scan TCP SYN)
+# - Linux: libpcap-dev (para scan TCP SYN)
+# - Ambos: Python 3.7 ou superior 
